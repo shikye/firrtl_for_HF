@@ -36,4 +36,11 @@ jenkins-build:	clean
 	$(SBT) $(SBT_FLAGS) +clean +test +publish-local
 	$(SBT) $(SBT_FLAGS) coverageReport
 
-.PHONY: build clean regress build-scala test-scala
+
+modify:
+	$(SBT) compile
+	$(SBT) assembly
+	./utils/bin/firrtl -i ~/nutshell-difuzz/NutShell.fir -td ~/nutshell-difuzz/ -fct coverage.regCoverage -X verilog -faf ~/nutshell-difuzz/NutShell.anno.json --allow-unrecognized-annotations -o ~/nutshell-difuzz/out.v > ~/nutshell-difuzz/log
+
+
+.PHONY: build clean regress build-scala test-scala modify
