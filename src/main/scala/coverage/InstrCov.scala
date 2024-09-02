@@ -146,6 +146,33 @@ class InstrCov(mod: DefModule, mInfo: moduleInfo, extModules: Seq[String], val m
 
     print("=============================================\n")
     print(s"${mName}\n")
+    print("[All Offsets]\n")
+    //allOffsets.foreach { case (node, offset) =>
+    //  node match {
+    //    case reg: DefRegister => print(s"regName: ${reg.name}, offset: $offset\n")
+    //    case ref: firrtl.ir.Reference => print(s"refName: ${ref.name}, offset: $offset\n")
+    //    case _ => print(s"Unknown type: ${node.getClass.getName}, offset: $offset\n")
+    //  }
+    //}
+    allOffsets.foreach { case (node, offset) =>
+      node match {
+        case reg: DefRegister =>
+          val width = reg.tpe match {
+            case uint: UIntType => uint.width
+            case sint: SIntType => sint.width
+            case _ => "Unknown width"
+          }
+          print(s"regName: ${reg.name}, offset: $offset, width: $width\n")
+        case ref: firrtl.ir.Reference =>
+          val width = ref.tpe match {
+            case uint: UIntType => uint.width
+            case sint: SIntType => sint.width
+            case _ => "Unknown width"
+          }
+          print(s"refName: ${ref.name}, offset: $offset, width: $width\n")
+        case _ => print(s"Unknown type: ${node.getClass.getName}, offset: $offset\n")
+      }
+    }
     print("---------------------------------------------\n")
     print(s"regStateSize: ${regStateSize}, totBitWidth: ${totBitWidth}, numRegs: ${ctrlRegs.size}\n")
     // print(s"[Offsets]\n" + ctrlOffsets.map(tuple => tuple._1 match {
@@ -521,10 +548,19 @@ class InstrCov(mod: DefModule, mInfo: moduleInfo, extModules: Seq[String], val m
         }).toSeq)
       }
       case x => {
-        val rand = Random
-        val offsets = zipWidth.map { case (x, i) => (x, rand.nextInt(maxStateSize - i + 1)) }
+        var sum_offset = 0
+        val offsets = zipWidth.map(tuple => {
+          val offset = sum_offset
+          sum_offset = (sum_offset + tuple._2) % maxStateSize
+          (tuple._1 , offset)
+        }).toSeq
         (totBitWidth, maxStateSize, offsets)
       }
+      //case x => {
+      //  val rand = Random
+      //  val offsets = zipWidth.map { case (x, i) => (x, rand.nextInt(maxStateSize - i + 1)) }
+      //  (totBitWidth, maxStateSize, offsets)
+      //}
     }
   }
 
